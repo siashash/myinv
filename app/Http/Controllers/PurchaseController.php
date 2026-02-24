@@ -29,7 +29,10 @@ class PurchaseController extends Controller
             'sgst_percent',
             'igst_percent',
         ]);
-        $purchases = PurchaseMaster::with('supplier')->orderBy('id', 'desc')->get();
+        $purchases = PurchaseMaster::with('supplier')
+            ->withSum('details as total_qty', 'qty')
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view('purchases.index', compact('suppliers', 'products', 'purchases'));
     }

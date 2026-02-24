@@ -176,9 +176,10 @@
                             <th>Purchase date</th>
                             <th>Supplier name</th>
                             <th>Supplier inv no</th>
-                            <th>Taxable amount</th>
-                            <th>Gst amount</th>
-                            <th>Invoice amount</th>
+                            <th class="text-end">Purchase qty</th>
+                            <th class="text-end">Taxable amount</th>
+                            <th class="text-end">Gst amount</th>
+                            <th class="text-end">Invoice amount</th>
                             <th>Purchase mode</th>
                             <th width="150">Action</th>
                         </tr>
@@ -190,9 +191,10 @@
                                 <td>{{ $purchase->purchase_date }}</td>
                                 <td>{{ $purchase->supplier_name }}</td>
                                 <td>{{ $purchase->supplier_inv_no }}</td>
-                                <td>{{ number_format($purchase->tot_taxable_amount, 2) }}</td>
-                                <td>{{ number_format($purchase->tot_gst_amount, 2) }}</td>
-                                <td>{{ number_format($purchase->invoice_amount, 2) }}</td>
+                                <td class="text-end">{{ number_format((float) ($purchase->total_qty ?? 0), 3) }}</td>
+                                <td class="text-end">{{ number_format($purchase->tot_taxable_amount, 2) }}</td>
+                                <td class="text-end">{{ number_format($purchase->tot_gst_amount, 2) }}</td>
+                                <td class="text-end">{{ number_format($purchase->invoice_amount, 2) }}</td>
                                 <td>{{ $purchase->purchase_mode }}</td>
                                 <td class="text-nowrap">
                                     <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm btn-info">Edit</a>
@@ -204,7 +206,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center">No purchases found.</td></tr>
+                            <tr><td colspan="10" class="text-center">No purchases found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
