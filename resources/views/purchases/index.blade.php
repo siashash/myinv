@@ -123,7 +123,7 @@
                                 <th>Cgst %</th>
                                 <th>Sgst %</th>
                                 <th>Igst %</th>
-                                <th>Gst amount</th>
+                                <th class="text-end">Gst amount</th>
                                 <th>Net amount</th>
                                 <th>Action</th>
                             </tr>
@@ -165,53 +165,88 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header"><h5 class="mb-0">Purchase list</h5></div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead class="table-light">
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Purchase list</h5>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Purchase date</th>
+                        <th>Supplier name</th>
+                        <th class="text-end">Supplier inv no</th>
+                        <th class="text-end">Taxable amount</th>
+                        <th class="text-end">Gst amount</th>
+                        <th class="text-end">Invoice amount</th>
+                        <th>Purchase mode</th>
+                        <th width="150">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @forelse ($purchases as $purchase)
                         <tr>
-                            <th>ID</th>
-                            <th>Purchase date</th>
-                            <th>Supplier name</th>
-                            <th>Supplier inv no</th>
-                            <th>Taxable amount</th>
-                            <th>Gst amount</th>
-                            <th>Invoice amount</th>
-                            <th>Purchase mode</th>
-                            <th width="150">Action</th>
+                            <td>{{ $purchase->id }}</td>
+
+                            <td>{{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d-m-Y') }}</td>
+
+                            <td>{{ $purchase->supplier_name }}</td>
+
+                            <td class="text-end">
+                                {{ $purchase->supplier_inv_no }}
+                            </td>
+
+                            <td class="text-end">
+                                ₹ {{ number_format($purchase->tot_taxable_amount, 2) }}
+                            </td>
+
+                            <td class="text-end">
+                                ₹ {{ number_format($purchase->tot_gst_amount, 2) }}
+                            </td>
+
+                            <td class="text-end fw-bold">
+                                ₹ {{ number_format($purchase->invoice_amount, 2) }}
+                            </td>
+
+                            <td>{{ $purchase->purchase_mode }}</td>
+
+                            <td class="text-nowrap">
+                                <a href="{{ route('purchases.edit', $purchase) }}" 
+                                   class="btn btn-sm btn-info">
+                                    Edit
+                                </a>
+
+                                <form action="{{ route('purchases.destroy', $purchase) }}" 
+                                      method="POST" 
+                                      class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" 
+                                            class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Are you sure?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($purchases as $purchase)
-                            <tr>
-                                <td>{{ $purchase->id }}</td>
-                                <td>{{ $purchase->purchase_date }}</td>
-                                <td>{{ $purchase->supplier_name }}</td>
-                                <td>{{ $purchase->supplier_inv_no }}</td>
-                                <td>{{ number_format($purchase->tot_taxable_amount, 2) }}</td>
-                                <td>{{ number_format($purchase->tot_gst_amount, 2) }}</td>
-                                <td>{{ number_format($purchase->invoice_amount, 2) }}</td>
-                                <td>{{ $purchase->purchase_mode }}</td>
-                                <td class="text-nowrap">
-                                    <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form action="{{ route('purchases.destroy', $purchase) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="9" class="text-center">No purchases found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center py-3">
+                                No purchases found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+
+            </table>
         </div>
     </div>
-</div>
+</div></div>
 @endsection
 
 @push('scripts')
@@ -373,3 +408,4 @@
 })();
 </script>
 @endpush
+

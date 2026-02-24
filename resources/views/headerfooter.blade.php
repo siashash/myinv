@@ -122,7 +122,7 @@
         </a>
         <div class="submenu">
             <ul>
-                <li><a href="javascript:void(0)">Purchase</a></li>
+                <li><a href="{{ route('purchase-payments.index') }}">Purchase</a></li>
                 <li><a href="javascript:void(0)">Expenses</a></li>
             </ul>
         </div>
@@ -221,3 +221,4 @@
 
 </body>
 </html>
+

@@ -37,7 +37,7 @@
                         <tr>
                             <th>Purchase date</th>
                             <th>Supplier name</th>
-                            <th>Supplier inv no</th>
+                            <th class="text-end">Supplier inv no</th>
                             <th>Purchase mode</th>
                             <th>Product name</th>
                             <th>Uom</th>
@@ -54,7 +54,7 @@
                             <tr>
                                 <td>{{ $row->purchase_date }}</td>
                                 <td>{{ $row->supplier_name }}</td>
-                                <td>{{ $row->supplier_inv_no }}</td>
+                                <td class="text-end">{{ $row->supplier_inv_no }}</td>
                                 <td>{{ $row->purchase_mode }}</td>
                                 <td>{{ $row->product_name }}</td>
                                 <td>{{ $row->sales_unit }}</td>
@@ -75,3 +75,4 @@
     </div>
 </div>
 @endsection
+

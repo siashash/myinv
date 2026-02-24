@@ -5,6 +5,7 @@ use App\Http\Controllers\AcHeadController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -46,6 +47,9 @@ Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->n
 Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
 Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
 Route::get('/purchases-details', [PurchaseController::class, 'details'])->name('purchases.details');
+
+Route::get('/purchase-payments', [PurchasePaymentController::class, 'index'])->name('purchase-payments.index');
+Route::post('/purchase-payments', [PurchasePaymentController::class, 'store'])->name('purchase-payments.store');
 
 Route::get('/units', [UnitController::class, 'index'])->name('units.index');
 Route::post('/units', [UnitController::class, 'store'])->name('units.store');
