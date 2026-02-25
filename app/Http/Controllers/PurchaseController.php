@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\PurchaseDetail;
 use App\Models\PurchaseMaster;
+use App\Models\PurchasePayment;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,10 @@ class PurchaseController extends Controller
             'sgst_percent',
             'igst_percent',
         ]);
-        $purchases = PurchaseMaster::with('supplier')->orderBy('id', 'desc')->get();
+        $purchases = PurchaseMaster::with('supplier')
+            ->withCount('payments')
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view('purchases.index', compact('suppliers', 'products', 'purchases'));
     }
@@ -64,6 +68,12 @@ class PurchaseController extends Controller
 
     public function edit(PurchaseMaster $purchase)
     {
+        if ($this->hasAnyPayment($purchase)) {
+            return redirect()
+                ->route('purchases.index')
+                ->with('error', 'Edit is not allowed because payment already exists for this supplier invoice.');
+        }
+
         $purchase->load('details');
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
         $products = Product::orderBy('product_name')->get([
@@ -85,6 +95,12 @@ class PurchaseController extends Controller
 
     public function update(Request $request, PurchaseMaster $purchase)
     {
+        if ($this->hasAnyPayment($purchase)) {
+            return redirect()
+                ->route('purchases.index')
+                ->with('error', 'Update is not allowed because payment already exists for this supplier invoice.');
+        }
+
         $validated = $this->validatePurchase($request);
 
         DB::transaction(function () use ($validated, $purchase): void {
@@ -114,6 +130,12 @@ class PurchaseController extends Controller
 
     public function destroy(PurchaseMaster $purchase)
     {
+        if ($this->hasAnyPayment($purchase)) {
+            return redirect()
+                ->route('purchases.index')
+                ->with('error', 'Delete is not allowed because payment already exists for this supplier invoice.');
+        }
+
         $purchase->delete();
 
         return redirect()->route('purchases.index')->with('success', 'Purchase deleted successfully.');
@@ -266,5 +288,23 @@ class PurchaseController extends Controller
             'tot_gst_amount' => $totGstAmount,
             'invoice_amount' => round($totTaxableAmount + $totGstAmount, 2),
         ];
+    }
+
+    private function hasAnyPayment(PurchaseMaster $purchase): bool
+    {
+        $hasByPurchaseId = $purchase->payments()->exists();
+        if ($hasByPurchaseId) {
+            return true;
+        }
+
+        // Fallback for legacy rows that may not have purchase_id linked.
+        if (! empty($purchase->supplier_inv_no)) {
+            return PurchasePayment::query()
+                ->where('supplier_id', (int) $purchase->supplier_id)
+                ->where('supplier_inv_no', (string) $purchase->supplier_inv_no)
+                ->exists();
+        }
+
+        return false;
     }
 }

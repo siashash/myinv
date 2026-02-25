@@ -1,0 +1,19 @@
+.purchase-payment-table .num-col {
+    text-align: right;
+}
+
+.purchase-payment-table .balance-col {
+    color: #dc3545;
+}
+
+.purchase-payment-table .payment-amount-cell {
+    min-width: 160px;
+}
+
+.purchase-payment-table .payment-amount-input {
+    text-align: right;
+}
+
+.purchase-payment-table .payment-mode-cell {
+    min-width: 150px;
+}

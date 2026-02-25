@@ -1,5 +1,9 @@
 @extends('headerfooter')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/purchase-payments.css') }}">
+@endpush
+
 @section('content')
 <div class="container-fluid px-4 mt-4">
     <div class="card mb-4">
@@ -41,15 +45,15 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table mb-0">
+                    <table class="table mb-0 purchase-payment-table">
                         <thead class="table-light">
                             <tr>
                                 <th>Purchase date</th>
                                 <th>Supplier inv no</th>
-                                <th class="text-end">Invoice amount</th>
-                                <th class="text-end">Paid amount</th>
-                                <th class="text-end">Balance amount</th>
-                                <th>Payment amount</th>
+                                <th class="num-col">Invoice amount</th>
+                                <th class="num-col">Paid amount</th>
+                                <th class="num-col">Balance amount</th>
+                                <th class="num-col">Payment amount</th>
                                 <th>Payment mode</th>
                                 <th>Action</th>
                             </tr>
@@ -60,10 +64,10 @@
                                 <tr>
                                     <td>{{ $purchase->purchase_date }}</td>
                                     <td>{{ $purchase->supplier_inv_no ?: '-' }}</td>
-                                    <td class="text-end">{{ number_format($purchase->invoice_amount, 2) }}</td>
-                                    <td class="text-end">{{ number_format($purchase->paid_amount, 2) }}</td>
-                                    <td class="text-end">{{ number_format($purchase->balance_amount, 2) }}</td>
-                                    <td style="min-width: 160px;">
+                                    <td class="num-col">{{ number_format($purchase->invoice_amount, 2) }}</td>
+                                    <td class="num-col">{{ number_format($purchase->paid_amount, 2) }}</td>
+                                    <td class="num-col balance-col">{{ number_format($purchase->balance_amount, 2) }}</td>
+                                    <td class="num-col payment-amount-cell">
                                         <input
                                             type="number"
                                             step="0.01"
@@ -71,13 +75,13 @@
                                             max="{{ $purchase->balance_amount }}"
                                             name="payment_amount"
                                             form="{{ $formId }}"
-                                            class="form-control"
+                                            class="form-control payment-amount-input"
                                             value="{{ old('purchase_id') == $purchase->id ? old('payment_amount') : $purchase->balance_amount }}"
                                             {{ $purchase->balance_amount <= 0 ? 'disabled' : '' }}
                                             required
                                         >
                                     </td>
-                                    <td style="min-width: 150px;">
+                                    <td class="payment-mode-cell">
                                         <select name="payment_mode" form="{{ $formId }}" class="form-control" {{ $purchase->balance_amount <= 0 ? 'disabled' : '' }} required>
                                             @foreach (['Cash', 'Cheque', 'UPI'] as $mode)
                                                 <option value="{{ $mode }}" {{ old('purchase_id') == $purchase->id && old('payment_mode') === $mode ? 'selected' : '' }}>{{ $mode }}</option>
@@ -95,6 +99,13 @@
                                                 <span class="badge badge-success">Paid</span>
                                             @endif
                                         </form>
+                                        @if ($purchase->latestPayment)
+                                            <form method="POST" action="{{ route('purchase-payments.cancel', $purchase->latestPayment) }}" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel latest payment for this invoice?')">Cancel</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

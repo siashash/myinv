@@ -1,5 +1,9 @@
 @extends('headerfooter')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/purchases.css') }}">
+@endpush
+
 @section('content')
 @php
     $oldProducts = old('product_id', []);
@@ -57,6 +61,9 @@
         <div class="card-body">
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
             <form action="{{ route('purchases.store') }}" method="POST">
@@ -172,16 +179,16 @@
 
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-bordered mb-0">
+            <table class="table table-bordered mb-0 purchase-list-table">
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
                         <th>Purchase date</th>
                         <th>Supplier name</th>
-                        <th class="text-end">Supplier inv no</th>
-                        <th class="text-end">Taxable amount</th>
-                        <th class="text-end">Gst amount</th>
-                        <th class="text-end">Invoice amount</th>
+                        <th class="num-col">Supplier inv no</th>
+                        <th class="num-col">Taxable amount</th>
+                        <th class="num-col">Gst amount</th>
+                        <th class="num-col">Invoice amount</th>
                         <th>Purchase mode</th>
                         <th width="150">Action</th>
                     </tr>
@@ -189,6 +196,7 @@
 
                 <tbody>
                     @forelse ($purchases as $purchase)
+                        @php $hasPayment = (int) ($purchase->payments_count ?? 0) > 0; @endphp
                         <tr>
                             <td>{{ $purchase->id }}</td>
 
@@ -196,42 +204,46 @@
 
                             <td>{{ $purchase->supplier_name }}</td>
 
-                            <td class="text-end">
+                            <td class="num-col">
                                 {{ $purchase->supplier_inv_no }}
                             </td>
 
-                            <td class="text-end">
+                            <td class="num-col">
                                 ₹ {{ number_format($purchase->tot_taxable_amount, 2) }}
                             </td>
 
-                            <td class="text-end">
+                            <td class="num-col">
                                 ₹ {{ number_format($purchase->tot_gst_amount, 2) }}
                             </td>
 
-                            <td class="text-end fw-bold">
+                            <td class="num-col fw-bold">
                                 ₹ {{ number_format($purchase->invoice_amount, 2) }}
                             </td>
 
                             <td>{{ $purchase->purchase_mode }}</td>
 
                             <td class="text-nowrap">
-                                <a href="{{ route('purchases.edit', $purchase) }}" 
-                                   class="btn btn-sm btn-info">
-                                    Edit
-                                </a>
+                                @if ($hasPayment)
+                                    <span class="badge badge-secondary">Locked</span>
+                                @else
+                                    <a href="{{ route('purchases.edit', $purchase) }}" 
+                                       class="btn btn-sm btn-info">
+                                        Edit
+                                    </a>
 
-                                <form action="{{ route('purchases.destroy', $purchase) }}" 
-                                      method="POST" 
-                                      class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
+                                    <form action="{{ route('purchases.destroy', $purchase) }}" 
+                                          method="POST" 
+                                          class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
 
-                                    <button type="submit" 
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure?')">
-                                        Delete
-                                    </button>
-                                </form>
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -408,4 +420,3 @@
 })();
 </script>
 @endpush
-

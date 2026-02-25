@@ -50,6 +50,7 @@ Route::get('/purchases-details', [PurchaseController::class, 'details'])->name('
 
 Route::get('/purchase-payments', [PurchasePaymentController::class, 'index'])->name('purchase-payments.index');
 Route::post('/purchase-payments', [PurchasePaymentController::class, 'store'])->name('purchase-payments.store');
+Route::delete('/purchase-payments/{payment}', [PurchasePaymentController::class, 'cancel'])->name('purchase-payments.cancel');
 
 Route::get('/units', [UnitController::class, 'index'])->name('units.index');
 Route::post('/units', [UnitController::class, 'store'])->name('units.store');

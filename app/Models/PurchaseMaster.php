@@ -36,4 +36,9 @@ class PurchaseMaster extends Model
     {
         return $this->hasMany(PurchasePayment::class, 'purchase_id');
     }
+
+    public function latestPayment()
+    {
+        return $this->hasOne(PurchasePayment::class, 'purchase_id')->latestOfMany('id');
+    }
 }

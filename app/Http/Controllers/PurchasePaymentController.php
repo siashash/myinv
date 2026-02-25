@@ -25,6 +25,17 @@ class PurchasePaymentController extends Controller
             $purchases = PurchaseMaster::query()
                 ->where('supplier_id', (int) $selectedSupplierId)
                 ->withSum('payments as paid_amount', 'payment_amount')
+                ->with([
+                    'latestPayment' => function ($query) {
+                        $query->select([
+                            'purchase_payments.id',
+                            'purchase_payments.purchase_id',
+                            'purchase_payments.payment_amount',
+                            'purchase_payments.payment_mode',
+                            'purchase_payments.payment_date',
+                        ]);
+                    },
+                ])
                 ->orderBy('purchase_date', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
@@ -97,5 +108,18 @@ class PurchasePaymentController extends Controller
         return redirect()
             ->route('purchase-payments.index', ['supplier_id' => $validated['supplier_id']])
             ->with('success', 'Payment saved successfully.');
+    }
+
+    public function cancel(PurchasePayment $payment): RedirectResponse
+    {
+        $supplierId = (int) $payment->supplier_id;
+
+        DB::transaction(function () use ($payment): void {
+            $payment->delete();
+        });
+
+        return redirect()
+            ->route('purchase-payments.index', ['supplier_id' => $supplierId])
+            ->with('success', 'Payment cancelled successfully.');
     }
 }
