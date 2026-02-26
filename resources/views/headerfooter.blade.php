@@ -107,7 +107,7 @@
         </a>
         <div class="submenu">
             <ul>
-                <li><a href="javascript:void(0)">Purchase Return</a></li>
+                <li><a href="{{ route('purchase-returns.index') }}">Purchase Return</a></li>
                 <li><a href="javascript:void(0)">Sales Return</a></li>
             </ul>
         </div>
@@ -152,11 +152,11 @@
         </a>
         <div class="submenu">
             <ul>
-                <li><a href="javascript:void(0)">Stock</a></li>
+                <li><a href="{{ route('reports.stock') }}">Stock</a></li>
                 <li><a href="{{ route('purchases.details') }}">Purchase</a></li>
                 <li><a href="javascript:void(0)">Sales</a></li>
                 <li><a href="javascript:void(0)">Debtors</a></li>
-                <li><a href="javascript:void(0)">Creditors</a></li>
+                <li><a href="{{ route('reports.sundry-creditors') }}">Creditors</a></li>
             </ul>
         </div>
     </li>
@@ -221,4 +221,3 @@
 
 </body>
 </html>
-

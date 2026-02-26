@@ -6,11 +6,14 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PurchasePaymentController;
+use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\StockReportController;
+use App\Http\Controllers\SundryDebtorReportController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -47,10 +50,15 @@ Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->n
 Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
 Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
 Route::get('/purchases-details', [PurchaseController::class, 'details'])->name('purchases.details');
+Route::get('/reports/stock', [StockReportController::class, 'index'])->name('reports.stock');
+Route::get('/reports/sundry-debtors', [SundryDebtorReportController::class, 'index'])->name('reports.sundry-debtors');
+Route::get('/reports/sundry-creditors', [SundryDebtorReportController::class, 'index'])->name('reports.sundry-creditors');
 
 Route::get('/purchase-payments', [PurchasePaymentController::class, 'index'])->name('purchase-payments.index');
 Route::post('/purchase-payments', [PurchasePaymentController::class, 'store'])->name('purchase-payments.store');
 Route::delete('/purchase-payments/{payment}', [PurchasePaymentController::class, 'cancel'])->name('purchase-payments.cancel');
+Route::get('/purchase-returns', [PurchaseReturnController::class, 'index'])->name('purchase-returns.index');
+Route::post('/purchase-returns', [PurchaseReturnController::class, 'store'])->name('purchase-returns.store');
 
 Route::get('/units', [UnitController::class, 'index'])->name('units.index');
 Route::post('/units', [UnitController::class, 'store'])->name('units.store');

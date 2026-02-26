@@ -33,4 +33,9 @@ class PurchaseDetail extends Model
     {
         return $this->belongsTo(PurchaseMaster::class, 'pur_id');
     }
+
+    public function returnItems()
+    {
+        return $this->hasMany(PurchaseReturnItem::class, 'purchase_detail_id');
+    }
 }
