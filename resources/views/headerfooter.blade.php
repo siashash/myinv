@@ -156,7 +156,7 @@
                 <li><a href="{{ route('purchases.details') }}">Purchase</a></li>
                 <li><a href="javascript:void(0)">Sales</a></li>
                 <li><a href="javascript:void(0)">Debtors</a></li>
-                <li><a href="javascript:void(0)">Creditors</a></li>
+                <li><a href="{{ route('reports.sundry-creditors') }}">Creditors</a></li>
             </ul>
         </div>
     </li>
@@ -221,4 +221,3 @@
 
 </body>
 </html>
-

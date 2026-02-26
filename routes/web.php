@@ -13,6 +13,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\StockReportController;
+use App\Http\Controllers\SundryDebtorReportController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,8 @@ Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name
 Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
 Route::get('/purchases-details', [PurchaseController::class, 'details'])->name('purchases.details');
 Route::get('/reports/stock', [StockReportController::class, 'index'])->name('reports.stock');
+Route::get('/reports/sundry-debtors', [SundryDebtorReportController::class, 'index'])->name('reports.sundry-debtors');
+Route::get('/reports/sundry-creditors', [SundryDebtorReportController::class, 'index'])->name('reports.sundry-creditors');
 
 Route::get('/purchase-payments', [PurchasePaymentController::class, 'index'])->name('purchase-payments.index');
 Route::post('/purchase-payments', [PurchasePaymentController::class, 'store'])->name('purchase-payments.store');

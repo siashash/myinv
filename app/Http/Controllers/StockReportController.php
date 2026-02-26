@@ -13,6 +13,8 @@ class StockReportController extends Controller
     public function index(Request $request)
     {
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
+        $products = Product::orderBy('product_name')->get(['id', 'product_name', 'product_code']);
+        $selectedProductId = (string) $request->input('product_id', '');
 
         $stockAgg = Stock::query()
             ->select([
@@ -28,6 +30,10 @@ class StockReportController extends Controller
 
         if ($request->filled('entry_date')) {
             $stockAgg->whereDate('entry_date', '<=', $request->string('entry_date'));
+        }
+
+        if ($selectedProductId !== '') {
+            $stockAgg->where('product_id', (int) $selectedProductId);
         }
 
         $stockAgg->groupBy('product_id');
@@ -52,12 +58,54 @@ class StockReportController extends Controller
             ->orderBy('products.product_name')
             ->get();
 
+        $productMovements = collect();
+        $selectedProduct = null;
+        if ($selectedProductId !== '') {
+            $selectedProduct = Product::query()->find((int) $selectedProductId);
+
+            $movementQuery = Stock::query()
+                ->where('product_id', (int) $selectedProductId)
+                ->orderBy('entry_date')
+                ->orderBy('id');
+
+            if ($request->filled('supplier_id')) {
+                $movementQuery->where('supplier_id', (int) $request->input('supplier_id'));
+            }
+
+            if ($request->filled('entry_date')) {
+                $movementQuery->whereDate('entry_date', '<=', $request->string('entry_date'));
+            }
+
+            $openingStock = round((float) ($selectedProduct->opening_stock ?? 0), 3);
+            $runningStock = $openingStock;
+
+            $productMovements = $movementQuery->get()->map(function (Stock $row) use (&$runningStock) {
+                $qty = round((float) $row->qty, 3);
+                $purchaseQty = $qty > 0 ? $qty : 0.0;
+                $purchaseReturnQty = $qty < 0 ? abs($qty) : 0.0;
+                $runningStock = round($runningStock + $qty, 3);
+
+                return [
+                    'entry_date' => (string) $row->entry_date,
+                    'batch_id' => (string) $row->batch_id,
+                    'purchase_qty' => $purchaseQty,
+                    'purchase_return_qty' => $purchaseReturnQty,
+                    'net_qty' => $qty,
+                    'balance_stock' => $runningStock,
+                ];
+            });
+        }
+
         return view('reports.stock', [
             'rows' => $rows,
             'suppliers' => $suppliers,
+            'products' => $products,
+            'selectedProduct' => $selectedProduct,
+            'productMovements' => $productMovements,
             'filters' => [
                 'supplier_id' => (string) $request->input('supplier_id', ''),
                 'entry_date' => (string) $request->input('entry_date', ''),
+                'product_id' => $selectedProductId,
             ],
         ]);
     }
