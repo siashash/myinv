@@ -25,6 +25,7 @@ class PurchasePaymentController extends Controller
             $purchases = PurchaseMaster::query()
                 ->where('supplier_id', (int) $selectedSupplierId)
                 ->withSum('payments as paid_amount', 'payment_amount')
+                ->withSum('purchaseReturns as return_amount', 'total_credit_amount')
                 ->with([
                     'latestPayment' => function ($query) {
                         $query->select([
@@ -42,10 +43,14 @@ class PurchasePaymentController extends Controller
 
             $purchases->transform(function (PurchaseMaster $purchase) {
                 $paidAmount = round((float) ($purchase->paid_amount ?? 0), 2);
+                $returnAmount = round((float) ($purchase->return_amount ?? 0), 2);
                 $invoiceAmount = round((float) $purchase->invoice_amount, 2);
-                $balanceAmount = max(0, round($invoiceAmount - $paidAmount, 2));
+                $netInvoiceAmount = max(0, round($invoiceAmount - $returnAmount, 2));
+                $balanceAmount = max(0, round($netInvoiceAmount - $paidAmount, 2));
 
                 $purchase->paid_amount = $paidAmount;
+                $purchase->return_amount = $returnAmount;
+                $purchase->net_invoice_amount = $netInvoiceAmount;
                 $purchase->balance_amount = $balanceAmount;
 
                 return $purchase;
@@ -82,14 +87,22 @@ class PurchasePaymentController extends Controller
             $alreadyPaid = (float) PurchasePayment::query()
                 ->where('purchase_id', $purchase->id)
                 ->sum('payment_amount');
+            $returnAmount = (float) $purchase->purchaseReturns()->sum('total_credit_amount');
 
             $invoiceAmount = round((float) $purchase->invoice_amount, 2);
-            $balanceAmount = max(0, round($invoiceAmount - $alreadyPaid, 2));
+            $netInvoiceAmount = max(0, round($invoiceAmount - $returnAmount, 2));
+            $balanceAmount = max(0, round($netInvoiceAmount - $alreadyPaid, 2));
             $paymentAmount = round((float) $validated['payment_amount'], 2);
+
+            if ($balanceAmount <= 0) {
+                throw ValidationException::withMessages([
+                    'payment_amount' => 'This invoice is already fully settled.',
+                ]);
+            }
 
             if ($paymentAmount > $balanceAmount) {
                 throw ValidationException::withMessages([
-                    'payment_amount' => 'Payment amount cannot exceed balance amount ('.number_format($balanceAmount, 2).').',
+                    'payment_amount' => 'Payment amount cannot exceed payable balance ('.number_format($balanceAmount, 2).').',
                 ]);
             }
 

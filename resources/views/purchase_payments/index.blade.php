@@ -51,6 +51,7 @@
                                 <th>Purchase date</th>
                                 <th>Supplier inv no</th>
                                 <th class="num-col">Invoice amount</th>
+                                <th class="num-col">Purchase return amount</th>
                                 <th class="num-col">Paid amount</th>
                                 <th class="num-col">Balance amount</th>
                                 <th class="num-col">Payment amount</th>
@@ -65,6 +66,7 @@
                                     <td>{{ $purchase->purchase_date }}</td>
                                     <td>{{ $purchase->supplier_inv_no ?: '-' }}</td>
                                     <td class="num-col">{{ number_format($purchase->invoice_amount, 2) }}</td>
+                                    <td class="num-col">{{ number_format($purchase->return_amount ?? 0, 2) }}</td>
                                     <td class="num-col">{{ number_format($purchase->paid_amount, 2) }}</td>
                                     <td class="num-col balance-col">{{ number_format($purchase->balance_amount, 2) }}</td>
                                     <td class="num-col payment-amount-cell">
@@ -110,7 +112,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No purchase records found for selected supplier.</td>
+                                    <td colspan="9" class="text-center">No purchase records found for selected supplier.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -6,7 +6,9 @@ use App\Models\Product;
 use App\Models\PurchaseDetail;
 use App\Models\PurchaseMaster;
 use App\Models\PurchasePayment;
+use App\Models\Stock;
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -61,6 +63,8 @@ class PurchaseController extends Controller
             foreach ($detailsPayload['details'] as $detail) {
                 $purchase->details()->create($detail);
             }
+
+            $this->syncStockForPurchase($purchase, $detailsPayload['details'], $validated['entry_date']);
         });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase created successfully.');
@@ -123,6 +127,8 @@ class PurchaseController extends Controller
             foreach ($detailsPayload['details'] as $detail) {
                 $purchase->details()->create($detail);
             }
+
+            $this->syncStockForPurchase($purchase, $detailsPayload['details'], $validated['entry_date']);
         });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.');
@@ -306,5 +312,39 @@ class PurchaseController extends Controller
         }
 
         return false;
+    }
+
+    private function syncStockForPurchase(PurchaseMaster $purchase, array $details, string $entryDate): void
+    {
+        Stock::query()->where('purchase_id', $purchase->id)->delete();
+
+        $batchId = $this->buildBatchId($purchase);
+        foreach ($details as $detail) {
+            Stock::create([
+                'purchase_id' => $purchase->id,
+                'entry_date' => $entryDate,
+                'product_id' => $detail['product_id'],
+                'product_name' => $detail['product_name'],
+                'uom' => $detail['sales_unit'] ?? null,
+                'qty' => $detail['qty'],
+                'supplier_id' => $purchase->supplier_id,
+                'batch_id' => $batchId,
+            ]);
+        }
+    }
+
+    private function buildBatchId(PurchaseMaster $purchase): string
+    {
+        $cleanSupplier = preg_replace('/[^A-Za-z]/', '', (string) $purchase->supplier_name) ?? '';
+        $supplierPrefix = strtoupper(substr($cleanSupplier, 0, 2));
+        if (strlen($supplierPrefix) < 2) {
+            $supplierPrefix = str_pad($supplierPrefix, 2, 'X');
+        }
+
+        $purchaseDate = Carbon::parse($purchase->purchase_date);
+        $month = strtoupper($purchaseDate->format('M'));
+        $year = strtoupper($purchaseDate->format('y'));
+
+        return $supplierPrefix . '-' . $month . '-' . $year;
     }
 }

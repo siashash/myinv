@@ -41,4 +41,14 @@ class PurchaseMaster extends Model
     {
         return $this->hasOne(PurchasePayment::class, 'purchase_id')->latestOfMany('id');
     }
+
+    public function purchaseReturns()
+    {
+        return $this->hasMany(PurchaseReturn::class, 'purchase_id');
+    }
+
+    public function creditAdjustments()
+    {
+        return $this->hasMany(SupplierCreditAdjustment::class, 'purchase_id');
+    }
 }
