@@ -192,15 +192,15 @@
                     const salesPrice = Number(selected.sales_price_su || 0);
 
                     unitNameSelect.innerHTML =
-                        '<option value="uom">Uom (' + baseLabel + ')</option>' +
-                        '<option value="sales_uom">Sales uom (' + salesLabel + ')</option>';
+                        '<option value="uom">P.Uom (' + baseLabel + ')</option>' +
+                        '<option value="sales_uom">S.Uom (' + salesLabel + ')</option>';
                     const selectedUnit = currentUnitValue === 'sales_uom' ? 'sales_uom' : 'uom';
                     unitNameSelect.value = selectedUnit;
                     row.querySelector('.sale-price').value = (selectedUnit === 'sales_uom' ? salesPrice : basePrice).toFixed(2);
                 } else {
                     unitNameSelect.innerHTML =
-                        '<option value="uom">Uom</option>' +
-                        '<option value="sales_uom">Sales uom</option>';
+                        '<option value="uom">P.Uom</option>' +
+                        '<option value="sales_uom">S.Uom</option>';
                     unitNameSelect.value = 'uom';
                     row.querySelector('.sale-price').value = '0.00';
                 }

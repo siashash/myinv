@@ -29,13 +29,14 @@ class UnitController extends Controller
         abort_unless($this->can(app(RolePermissionAccess::class), 'add'), 403);
 
         $validated = $request->validate([
-            'base_unit' => ['required', 'string', 'max:50'],
-            'sales_unit' => ['required', 'string', 'max:50'],
-            'conversion_factor' => ['required', 'numeric', 'gt:0'],
+            'prim_uom' => ['required', 'string', 'max:50'],
+            'prim_uom_conv' => ['required', 'numeric', 'gt:0'],
+            'sec_uom' => ['required', 'string', 'max:50'],
+            'sec_uom_conv' => ['required', 'numeric', 'gt:0'],
         ]);
 
-        $validated['base_unit'] = strtoupper(trim($validated['base_unit']));
-        $validated['sales_unit'] = strtoupper(trim($validated['sales_unit']));
+        $validated['prim_uom'] = strtoupper(trim($validated['prim_uom']));
+        $validated['sec_uom'] = strtoupper(trim($validated['sec_uom']));
 
         Unit::create($validated);
 
@@ -55,13 +56,14 @@ class UnitController extends Controller
         abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
 
         $validated = $request->validate([
-            'base_unit' => ['required', 'string', 'max:50'],
-            'sales_unit' => ['required', 'string', 'max:50'],
-            'conversion_factor' => ['required', 'numeric', 'gt:0'],
+            'prim_uom' => ['required', 'string', 'max:50'],
+            'prim_uom_conv' => ['required', 'numeric', 'gt:0'],
+            'sec_uom' => ['required', 'string', 'max:50'],
+            'sec_uom_conv' => ['required', 'numeric', 'gt:0'],
         ]);
 
-        $validated['base_unit'] = strtoupper(trim($validated['base_unit']));
-        $validated['sales_unit'] = strtoupper(trim($validated['sales_unit']));
+        $validated['prim_uom'] = strtoupper(trim($validated['prim_uom']));
+        $validated['sec_uom'] = strtoupper(trim($validated['sec_uom']));
 
         $unit->update($validated);
 

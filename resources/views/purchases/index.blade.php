@@ -151,11 +151,6 @@
                         <label for="invoice_amount">Invoice amount</label>
                         <input type="number" step="0.01" id="invoice_amount" class="form-control" readonly>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="round_off">Round off</label>
-                        <input type="number" step="1" min="0" max="4" id="round_off" class="form-control" value="2">
-                        <small class="form-text text-muted">Digits after decimal for invoice amount</small>
-                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Save purchase</button>
@@ -265,7 +260,6 @@
 
     const prefillRows = @json($prefillRows);
     const body = document.getElementById('purchase-lines-body');
-    const roundOffInput = document.getElementById('round_off');
 
     function productOptions(selectedId) {
         let html = '<option value="">Select product</option>';
@@ -307,16 +301,16 @@
                 const salesPrice = Number(selected.sales_price_su || 0);
 
                 unitNameSelect.innerHTML =
-                    '<option value="uom">Uom (' + baseLabel + ')</option>' +
-                    '<option value="sales_uom">Sales uom (' + salesLabel + ')</option>';
+                    '<option value="uom">P.Uom (' + baseLabel + ')</option>' +
+                    '<option value="sales_uom">S.Uom (' + salesLabel + ')</option>';
 
                 const selectedUnit = currentUnitValue === 'sales_uom' ? 'sales_uom' : 'uom';
                 unitNameSelect.value = selectedUnit;
                 row.querySelector('.sale-price').value = (selectedUnit === 'sales_uom' ? salesPrice : basePrice).toFixed(2);
             } else {
                 unitNameSelect.innerHTML =
-                    '<option value="uom">Uom</option>' +
-                    '<option value="sales_uom">Sales uom</option>';
+                    '<option value="uom">P.Uom</option>' +
+                    '<option value="sales_uom">S.Uom</option>';
                 unitNameSelect.value = 'uom';
                 row.querySelector('.sale-price').value = '0.00';
             }
@@ -394,8 +388,7 @@
 
         document.getElementById('tot_taxable_amount').value = taxable.toFixed(2);
         document.getElementById('tot_gst_amount').value = gst.toFixed(2);
-        const decimals = Math.max(0, Math.min(4, parseInt(roundOffInput.value || '2', 10)));
-        document.getElementById('invoice_amount').value = (taxable + gst).toFixed(decimals);
+        document.getElementById('invoice_amount').value = (taxable + gst).toFixed(2);
     }
 
     const addRowButton = document.getElementById('add-row-btn');
@@ -411,8 +404,6 @@
             igst_percent: '0.00'
         });
     });
-
-    roundOffInput.addEventListener('input', recalcTotals);
 
     prefillRows.forEach(function (row) {
         createRow(row);

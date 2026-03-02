@@ -8,6 +8,7 @@ use App\Models\SubCategory;
 use App\Models\Unit;
 use App\Support\RolePermissionAccess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -26,12 +27,13 @@ class ProductController extends Controller
         abort_unless($canView || $canAdd || $canEdit || $canDelete, 403);
 
         $categories = Category::orderBy('category_name')->get();
-        $units = Unit::orderBy('base_unit')->orderBy('sales_unit')->get();
+        $primaryUoms = $this->primaryUomOptions();
+        $secondaryUoms = $this->secondaryUomOptions();
         $products = Product::with(['category', 'subCategory', 'unit'])
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('products.index', compact('categories', 'units', 'products', 'canAdd', 'canEdit', 'canDelete'));
+        return view('products.index', compact('categories', 'primaryUoms', 'secondaryUoms', 'products', 'canAdd', 'canEdit', 'canDelete'));
     }
 
     public function store(Request $request)
@@ -50,12 +52,13 @@ class ProductController extends Controller
         abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
 
         $categories = Category::orderBy('category_name')->get();
+        $primaryUoms = $this->primaryUomOptions();
+        $secondaryUoms = $this->secondaryUomOptions();
         $subCategories = SubCategory::where('category_id', $product->category_id)
             ->orderBy('sub_category_name')
             ->get();
-        $units = Unit::orderBy('base_unit')->orderBy('sales_unit')->get();
 
-        return view('products.edit', compact('product', 'categories', 'subCategories', 'units'));
+        return view('products.edit', compact('product', 'categories', 'subCategories', 'primaryUoms', 'secondaryUoms'));
     }
 
     public function update(Request $request, Product $product)
@@ -111,10 +114,11 @@ class ProductController extends Controller
                 Rule::unique('products', 'product_code')->ignore($ignoreProductId),
             ],
             'hsn_code' => ['required', 'string', 'max:50'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
-            'unit_id' => ['required', 'exists:units,id'],
-            'discount_amount' => ['required', 'numeric', 'min:0', 'lte:purchase_price'],
-            'opening_stock' => ['required', 'numeric', 'min:0'],
+            'uom' => ['required', 'string', 'max:50'],
+            'sales_price_bu' => ['required', 'numeric', 'min:0'],
+            'sales_uom' => ['required', 'string', 'max:50'],
+            'sales_price_su' => ['required', 'numeric', 'min:0'],
+            'discount_amount' => ['required', 'numeric', 'min:0'],
             'cgst_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'sgst_percent' => ['required', 'numeric', 'min:0', 'max:100'],
             'igst_percent' => ['required', 'numeric', 'min:0', 'max:100'],
@@ -131,37 +135,64 @@ class ProductController extends Controller
             ]);
         }
 
-        $unit = Unit::findOrFail((int) $validated['unit_id']);
-        $validated['uom'] = $unit->base_unit;
-        $validated['sales_uom'] = $unit->sales_unit;
-        $conversionFactor = (float) ($unit->conversion_factor ?? 1);
-        if ($conversionFactor <= 0) {
-            $conversionFactor = 1;
-        }
-        $validated['conversion_factor'] = $conversionFactor;
+        $validated['uom'] = strtoupper(trim((string) $validated['uom']));
+        $validated['sales_uom'] = strtoupper(trim((string) $validated['sales_uom']));
+        $validated['sales_price_bu'] = round((float) $validated['sales_price_bu'], 2);
+        $validated['sales_price_su'] = round((float) $validated['sales_price_su'], 2);
+        $validated['conversion_factor'] = 1;
+        $validated['unit_id'] = null;
         $validated['base_unit_id'] = null;
         $validated['sale_unit_id'] = null;
-        $validated['sales_price_bu'] = round((float) $validated['purchase_price'], 2);
-        $validated['sales_price_su'] = round((float) $validated['purchase_price'] / $conversionFactor, 2);
-
-        $salePrice = round(
-            (float) $validated['purchase_price'] - (float) $validated['discount_amount'],
-            2
-        );
-        $salePrice = max(0, $salePrice);
 
         $totalTaxPercent = (float) $validated['cgst_percent']
             + (float) $validated['sgst_percent']
             + (float) $validated['igst_percent'];
         $validated['gst_percent'] = $totalTaxPercent;
 
-        $validated['sale_price'] = $salePrice;
-        $validated['final_price'] = round(
-            $salePrice + ($salePrice * ($totalTaxPercent / 100)),
-            2
-        );
+        $validated['purchase_price'] = (float) ($validated['purchase_price'] ?? 0);
+        $validated['opening_stock'] = (float) ($validated['opening_stock'] ?? 0);
+        $validated['sale_price'] = 0;
+        $validated['final_price'] = 0;
 
         return $validated;
+    }
+
+    private function primaryUomOptions()
+    {
+        if (Schema::hasColumn('units', 'prim_uom')) {
+            return Unit::query()
+                ->whereNotNull('prim_uom')
+                ->where('prim_uom', '!=', '')
+                ->distinct()
+                ->orderBy('prim_uom')
+                ->pluck('prim_uom');
+        }
+
+        return Unit::query()
+            ->whereNotNull('base_unit')
+            ->where('base_unit', '!=', '')
+            ->distinct()
+            ->orderBy('base_unit')
+            ->pluck('base_unit');
+    }
+
+    private function secondaryUomOptions()
+    {
+        if (Schema::hasColumn('units', 'sec_uom')) {
+            return Unit::query()
+                ->whereNotNull('sec_uom')
+                ->where('sec_uom', '!=', '')
+                ->distinct()
+                ->orderBy('sec_uom')
+                ->pluck('sec_uom');
+        }
+
+        return Unit::query()
+            ->whereNotNull('sales_unit')
+            ->where('sales_unit', '!=', '')
+            ->distinct()
+            ->orderBy('sales_unit')
+            ->pluck('sales_unit');
     }
 
     private function can(RolePermissionAccess $access, string $action): bool

@@ -26,49 +26,66 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="base_unit">Base unit</label>
+                            <label for="prim_uom">Primary UOM</label>
                             <input
                                 type="text"
-                                id="base_unit"
-                                name="base_unit"
+                                id="prim_uom"
+                                name="prim_uom"
                                 class="form-control"
-                                value="{{ old('base_unit') }}"
+                                value="{{ old('prim_uom') }}"
                                 required
                             >
-                            @error('base_unit')
+                            @error('prim_uom')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="sales_unit">Sales unit</label>
-                            <input
-                                type="text"
-                                id="sales_unit"
-                                name="sales_unit"
-                                class="form-control"
-                                value="{{ old('sales_unit') }}"
-                                maxlength="50"
-                                required
-                            >
-                            @error('sales_unit')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="conversion_factor">Conversion factor</label>
+                            <label for="prim_uom_conv">Primary UOM conversion</label>
                             <input
                                 type="number"
                                 step="0.0001"
                                 min="0.0001"
-                                id="conversion_factor"
-                                name="conversion_factor"
+                                id="prim_uom_conv"
+                                name="prim_uom_conv"
                                 class="form-control"
-                                value="{{ old('conversion_factor', '1') }}"
+                                value="{{ old('prim_uom_conv', '1') }}"
                                 required
                             >
-                            @error('conversion_factor')
+                            @error('prim_uom_conv')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="sec_uom">Secondary UOM</label>
+                            <input
+                                type="text"
+                                id="sec_uom"
+                                name="sec_uom"
+                                class="form-control"
+                                value="{{ old('sec_uom') }}"
+                                maxlength="50"
+                                required
+                            >
+                            @error('sec_uom')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="sec_uom_conv">Secondary UOM conversion</label>
+                            <input
+                                type="number"
+                                step="0.0001"
+                                min="0.0001"
+                                id="sec_uom_conv"
+                                name="sec_uom_conv"
+                                class="form-control"
+                                value="{{ old('sec_uom_conv', '1') }}"
+                                required
+                            >
+                            @error('sec_uom_conv')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
@@ -90,9 +107,10 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>Base unit</th>
-                            <th>Sales unit</th>
-                            <th>Conversion factor</th>
+                            <th>Primary UOM</th>
+                            <th>Primary conversion</th>
+                            <th>Secondary UOM</th>
+                            <th>Secondary conversion</th>
                             <th width="150">Action</th>
                         </tr>
                     </thead>
@@ -100,9 +118,10 @@
                         @forelse ($units as $unit)
                             <tr>
                                 <td>{{ $unit->id }}</td>
-                                <td>{{ $unit->base_unit }}</td>
-                                <td>{{ $unit->sales_unit }}</td>
-                                <td>{{ number_format($unit->conversion_factor, 4) }}</td>
+                                <td>{{ $unit->prim_uom }}</td>
+                                <td>{{ number_format($unit->prim_uom_conv, 4) }}</td>
+                                <td>{{ $unit->sec_uom }}</td>
+                                <td>{{ number_format($unit->sec_uom_conv, 4) }}</td>
                                 <td class="text-nowrap">
                                     @if ($canEdit)
                                         <a href="{{ route('units.edit', $unit) }}" class="btn btn-sm btn-info">Edit</a>
@@ -119,7 +138,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">No units found.</td>
+                                <td colspan="6" class="text-center">No units found.</td>
                             </tr>
                         @endforelse
                     </tbody>
