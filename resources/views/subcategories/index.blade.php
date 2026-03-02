@@ -2,66 +2,67 @@
 
 @section('content')
 <div class="container mt-4">
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Create sub-category</h5>
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
         </div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+    @endif
 
-            <form action="{{ route('subcategories.store') }}" method="POST">
-                @csrf
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Create sub-category</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('subcategories.store') }}" method="POST">
+                    @csrf
 
-                <div class="form-group mb-3">
-                    <label for="category_id">Category</label>
-                    <select id="category_id" name="category_id" class="form-control" required>
-                        <option value="">Select category</option>
-                        @foreach ($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                {{ $category->category_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('category_id')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
+                    <div class="form-group mb-3">
+                        <label for="category_id">Category</label>
+                        <select id="category_id" name="category_id" class="form-control" required>
+                            <option value="">Select category</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->category_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
 
-                <div class="form-group mb-3">
-                    <label for="sub_category_name">Sub-category name</label>
-                    <input
-                        type="text"
-                        id="sub_category_name"
-                        name="sub_category_name"
-                        class="form-control"
-                        value="{{ old('sub_category_name') }}"
-                        required
-                    >
-                    @error('sub_category_name')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
+                    <div class="form-group mb-3">
+                        <label for="sub_category_name">Sub-category name</label>
+                        <input
+                            type="text"
+                            id="sub_category_name"
+                            name="sub_category_name"
+                            class="form-control"
+                            value="{{ old('sub_category_name') }}"
+                            required
+                        >
+                        @error('sub_category_name')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
 
-                <div class="form-group mb-3">
-                    <label for="status">Status</label>
-                    <select id="status" name="status" class="form-control" required>
-                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
+                    <div class="form-group mb-3">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
 
-                <button type="submit" class="btn btn-primary">Save sub-category</button>
-            </form>
+                    <button type="submit" class="btn btn-primary">Save sub-category</button>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     <div class="card">
         <div class="card-header">
@@ -91,19 +92,23 @@
                                     </span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('subcategories.edit', $subcategory) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @if ($canEdit)
+                                        <a href="{{ route('subcategories.edit', $subcategory) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @endif
 
-                                    <form action="{{ route('subcategories.destroy', $subcategory) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button
-                                            type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure?')"
-                                        >
-                                            Delete
-                                        </button>
-                                    </form>
+                                    @if ($canDelete)
+                                        <form action="{{ route('subcategories.destroy', $subcategory) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure?')"
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

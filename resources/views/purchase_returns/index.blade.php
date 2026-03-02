@@ -105,7 +105,7 @@
                                                 name="return_qty[]"
                                                 class="form-control text-end"
                                                 value="{{ old('return_qty.' . $i, '0') }}"
-                                                {{ $detail->max_return_qty <= 0 ? 'readonly' : '' }}
+                                                {{ $detail->max_return_qty <= 0 || ! $canAdd ? 'readonly' : '' }}
                                             >
                                         </td>
                                     </tr>
@@ -115,7 +115,11 @@
                     </div>
 
                     <div class="mt-3">
-                        <button type="submit" class="btn btn-danger">Save return</button>
+                        @if ($canAdd)
+                            <button type="submit" class="btn btn-danger">Save return</button>
+                        @else
+                            <span class="badge badge-secondary">View only</span>
+                        @endif
                     </div>
                 </form>
             </div>

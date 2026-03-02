@@ -6,25 +6,38 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
 use App\Models\Unit;
+use App\Support\RolePermissionAccess;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
+    private const MODULE_NAMES = ['product', 'masters'];
+
     public function index()
     {
+        $access = app(RolePermissionAccess::class);
+        $canView = $this->can($access, 'view');
+        $canAdd = $this->can($access, 'add');
+        $canEdit = $this->can($access, 'edit');
+        $canDelete = $this->can($access, 'delete');
+
+        abort_unless($canView || $canAdd || $canEdit || $canDelete, 403);
+
         $categories = Category::orderBy('category_name')->get();
         $units = Unit::orderBy('base_unit')->orderBy('sales_unit')->get();
         $products = Product::with(['category', 'subCategory', 'unit'])
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('products.index', compact('categories', 'units', 'products'));
+        return view('products.index', compact('categories', 'units', 'products', 'canAdd', 'canEdit', 'canDelete'));
     }
 
     public function store(Request $request)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'add'), 403);
+
         $validated = $this->validateProduct($request);
 
         Product::create($validated);
@@ -34,6 +47,8 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
+
         $categories = Category::orderBy('category_name')->get();
         $subCategories = SubCategory::where('category_id', $product->category_id)
             ->orderBy('sub_category_name')
@@ -45,6 +60,8 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
+
         $validated = $this->validateProduct($request, $product->id);
 
         $product->update($validated);
@@ -54,6 +71,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'delete'), 403);
+
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
@@ -61,6 +80,12 @@ class ProductController extends Controller
 
     public function subCategories(Category $category)
     {
+        $access = app(RolePermissionAccess::class);
+        abort_unless(
+            $this->can($access, 'view') || $this->can($access, 'add') || $this->can($access, 'edit'),
+            403
+        );
+
         $subCategories = SubCategory::where('category_id', $category->id)
             ->orderBy('sub_category_name')
             ->get(['id', 'sub_category_name']);
@@ -137,5 +162,16 @@ class ProductController extends Controller
         );
 
         return $validated;
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

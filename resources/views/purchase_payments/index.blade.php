@@ -95,13 +95,13 @@
                                             @csrf
                                             <input type="hidden" name="supplier_id" value="{{ $selectedSupplierId }}">
                                             <input type="hidden" name="purchase_id" value="{{ $purchase->id }}">
-                                            @if ($purchase->balance_amount > 0)
+                                            @if ($purchase->balance_amount > 0 && $canAdd)
                                                 <button type="submit" class="btn btn-sm btn-primary">Payment</button>
                                             @else
-                                                <span class="badge badge-success">Paid</span>
+                                                <span class="badge badge-secondary">{{ $purchase->balance_amount > 0 ? 'No Add Access' : 'Paid' }}</span>
                                             @endif
                                         </form>
-                                        @if ($purchase->latestPayment)
+                                        @if ($purchase->latestPayment && $canDelete)
                                             <form method="POST" action="{{ route('purchase-payments.cancel', $purchase->latestPayment) }}" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')

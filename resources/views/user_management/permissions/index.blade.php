@@ -12,7 +12,16 @@
                 @csrf
                 <div class="form-group mb-3">
                     <label for="module_name">Module name</label>
-                    <input type="text" id="module_name" name="module_name" class="form-control" value="{{ old('module_name') }}" required>
+                    <select id="module_name" name="module_name" class="form-control" required>
+                        <option value="">Select module</option>
+                        @foreach ($availableModules as $group => $modules)
+                            <optgroup label="{{ $group }}">
+                                @foreach ($modules as $module)
+                                    <option value="{{ $module }}" {{ old('module_name') === $module ? 'selected' : '' }}>{{ $module }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
                     @error('module_name')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror

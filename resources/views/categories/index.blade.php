@@ -2,46 +2,47 @@
 
 @section('content')
 <div class="container mt-4">
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
 
     {{-- Create Category Card --}}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Create Category</h5>
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Create Category</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('categories.store') }}" method="POST">
+                    @csrf
+
+                    <div class="form-group mb-3">
+                        <label for="category_name">Category Name</label>
+                        <input type="text" id="category_name" name="category_name"
+                            class="form-control" value="{{ old('category_name') }}" required>
+                        @error('category_name')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <form action="{{ route('categories.store') }}" method="POST">
-                @csrf
-
-                <div class="form-group mb-3">
-                    <label for="category_name">Category Name</label>
-                    <input type="text" id="category_name" name="category_name" 
-                        class="form-control" value="{{ old('category_name') }}" required>
-                    @error('category_name')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="status">Status</label>
-                    <select id="status" name="status" class="form-control" required>
-                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status')
-                        <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Category</button>
-            </form>
-        </div>
-    </div>
+    @endif
 
 
     {{-- Category List Card --}}
@@ -71,19 +72,23 @@
                                     </span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('categories.edit', $category) }}" 
-                                       class="btn btn-sm btn-info">Edit</a>
+                                    @if ($canEdit)
+                                        <a href="{{ route('categories.edit', $category) }}"
+                                           class="btn btn-sm btn-info">Edit</a>
+                                    @endif
 
-                                    <form action="{{ route('categories.destroy', $category) }}" 
-                                          method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Are you sure?')">
-                                            Delete
-                                        </button>
-                                    </form>
+                                    @if ($canDelete)
+                                        <form action="{{ route('categories.destroy', $category) }}"
+                                              method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

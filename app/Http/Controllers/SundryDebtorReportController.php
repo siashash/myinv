@@ -6,12 +6,17 @@ use App\Models\PurchaseMaster;
 use App\Models\PurchasePayment;
 use App\Models\PurchaseReturn;
 use App\Models\Supplier;
+use App\Support\RolePermissionAccess;
 use Illuminate\Http\Request;
 
 class SundryDebtorReportController extends Controller
 {
+    private const MODULE_NAMES = ['sundry-creditors', 'sundry-debtors', 'reports'];
+
     public function index(Request $request)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'view'), 403);
+
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
         $supplierId = (string) $request->input('supplier_id', '');
         $dateFrom = (string) $request->input('date_from', '');
@@ -111,5 +116,16 @@ class SundryDebtorReportController extends Controller
                 'date_to' => $dateTo,
             ],
         ]);
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

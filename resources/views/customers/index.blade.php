@@ -2,14 +2,16 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Create customer</h5></div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            <form action="{{ route('customers.store') }}" method="POST">
-                @csrf
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Create customer</h5></div>
+            <div class="card-body">
+                <form action="{{ route('customers.store') }}" method="POST">
+                    @csrf
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="customer_name">Customer name</label>
@@ -46,9 +48,10 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save customer</button>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Customer list</h5></div>
@@ -78,12 +81,16 @@
                                 <td>{{ $customer->gst_no }}</td>
                                 <td>{{ $customer->status ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
+                                    @if ($canEdit)
+                                        <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @endif
+                                    @if ($canDelete)
+                                        <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

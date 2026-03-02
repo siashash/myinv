@@ -94,14 +94,6 @@
                                 <label for="purchase_date">Purchase date</label>
                                 <input type="date" id="purchase_date" name="purchase_date" class="form-control" value="{{ old('purchase_date', $purchase->purchase_date) }}" required>
                             </div>
-                            <div class="col-md-3 mb-3">
-                                <label for="purchase_mode">Purchase mode</label>
-                                <select id="purchase_mode" name="purchase_mode" class="form-control" required>
-                                    @foreach (['Cash', 'Credit', 'UPI'] as $mode)
-                                        <option value="{{ $mode }}" {{ old('purchase_mode', $purchase->purchase_mode) === $mode ? 'selected' : '' }}>{{ $mode }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
                         </div>
 
                         <div class="table-responsive">

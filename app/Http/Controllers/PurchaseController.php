@@ -8,6 +8,7 @@ use App\Models\PurchaseMaster;
 use App\Models\PurchasePayment;
 use App\Models\Stock;
 use App\Models\Supplier;
+use App\Support\RolePermissionAccess;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,18 @@ use Illuminate\Validation\ValidationException;
 
 class PurchaseController extends Controller
 {
+    private const MODULE_NAMES = ['purchase', 'transaction-purchase'];
+
     public function index()
     {
+        $access = app(RolePermissionAccess::class);
+        $canView = $this->can($access, 'view');
+        $canAdd = $this->can($access, 'add');
+        $canEdit = $this->can($access, 'edit');
+        $canDelete = $this->can($access, 'delete');
+
+        abort_unless($canView || $canAdd || $canEdit || $canDelete, 403);
+
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
         $products = Product::orderBy('product_name')->get([
             'id',
@@ -37,11 +48,13 @@ class PurchaseController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('purchases.index', compact('suppliers', 'products', 'purchases'));
+        return view('purchases.index', compact('suppliers', 'products', 'purchases', 'canAdd', 'canEdit', 'canDelete'));
     }
 
     public function store(Request $request)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'add'), 403);
+
         $validated = $this->validatePurchase($request);
 
         DB::transaction(function () use ($validated): void {
@@ -57,7 +70,7 @@ class PurchaseController extends Controller
                 'tot_taxable_amount' => $detailsPayload['tot_taxable_amount'],
                 'tot_gst_amount' => $detailsPayload['tot_gst_amount'],
                 'invoice_amount' => $detailsPayload['invoice_amount'],
-                'purchase_mode' => $validated['purchase_mode'],
+                'purchase_mode' => 'Credit',
             ]);
 
             foreach ($detailsPayload['details'] as $detail) {
@@ -72,6 +85,8 @@ class PurchaseController extends Controller
 
     public function edit(PurchaseMaster $purchase)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
+
         if ($this->hasAnyPayment($purchase)) {
             return redirect()
                 ->route('purchases.index')
@@ -99,6 +114,8 @@ class PurchaseController extends Controller
 
     public function update(Request $request, PurchaseMaster $purchase)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'edit'), 403);
+
         if ($this->hasAnyPayment($purchase)) {
             return redirect()
                 ->route('purchases.index')
@@ -120,7 +137,7 @@ class PurchaseController extends Controller
                 'tot_taxable_amount' => $detailsPayload['tot_taxable_amount'],
                 'tot_gst_amount' => $detailsPayload['tot_gst_amount'],
                 'invoice_amount' => $detailsPayload['invoice_amount'],
-                'purchase_mode' => $validated['purchase_mode'],
+                'purchase_mode' => 'Credit',
             ]);
 
             $purchase->details()->delete();
@@ -136,6 +153,8 @@ class PurchaseController extends Controller
 
     public function destroy(PurchaseMaster $purchase)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'delete'), 403);
+
         if ($this->hasAnyPayment($purchase)) {
             return redirect()
                 ->route('purchases.index')
@@ -149,6 +168,8 @@ class PurchaseController extends Controller
 
     public function details(Request $request)
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'view'), 403);
+
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
 
         $query = PurchaseDetail::query()
@@ -191,7 +212,6 @@ class PurchaseController extends Controller
             'supplier_id' => ['required', 'exists:suppliers,supplier_id'],
             'supplier_inv_no' => ['nullable', 'string', 'max:100'],
             'purchase_date' => ['required', 'date'],
-            'purchase_mode' => ['required', Rule::in(['Cash', 'Credit', 'UPI'])],
             'product_id' => ['required', 'array', 'min:1'],
             'product_id.*' => ['required', 'exists:products,id'],
             'unit_name' => ['required', 'array', 'min:1'],
@@ -346,5 +366,16 @@ class PurchaseController extends Controller
         $year = strtoupper($purchaseDate->format('y'));
 
         return $supplierPrefix . '-' . $month . '-' . $year;
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

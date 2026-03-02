@@ -2,14 +2,16 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Create supplier</h5></div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            <form action="{{ route('suppliers.store') }}" method="POST">
-                @csrf
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Create supplier</h5></div>
+            <div class="card-body">
+                <form action="{{ route('suppliers.store') }}" method="POST">
+                    @csrf
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="supplier_name">Supplier name</label>
@@ -51,9 +53,10 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save supplier</button>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Supplier list</h5></div>
@@ -85,12 +88,16 @@
                                 <td>{{ $supplier->gst_no }}</td>
                                 <td>{{ $supplier->status ? 'Active' : 'Inactive' }}</td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
+                                    @if ($canEdit)
+                                        <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @endif
+                                    @if ($canDelete)
+                                        <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

@@ -9,6 +9,7 @@ use App\Models\PurchaseReturnItem;
 use App\Models\Stock;
 use App\Models\Supplier;
 use App\Models\SupplierCreditNote;
+use App\Support\RolePermissionAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +18,16 @@ use Illuminate\View\View;
 
 class PurchaseReturnController extends Controller
 {
+    private const MODULE_NAMES = ['purchase-return', 'return-purchase'];
+
     public function index(Request $request): View
     {
+        $access = app(RolePermissionAccess::class);
+        $canView = $this->can($access, 'view');
+        $canAdd = $this->can($access, 'add');
+
+        abort_unless($canView || $canAdd, 403);
+
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
         $selectedSupplierId = (string) $request->input('supplier_id', '');
         $selectedPurchaseId = (string) $request->input('purchase_id', '');
@@ -65,6 +74,7 @@ class PurchaseReturnController extends Controller
             'purchases' => $purchases,
             'purchase' => $purchase,
             'details' => $details,
+            'canAdd' => $canAdd,
             'filters' => [
                 'supplier_id' => $selectedSupplierId,
                 'purchase_id' => $selectedPurchaseId,
@@ -74,6 +84,8 @@ class PurchaseReturnController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'add'), 403);
+
         $validated = $request->validate([
             'supplier_id' => ['required', 'exists:suppliers,supplier_id'],
             'purchase_id' => ['required', 'exists:purchase_master,id'],
@@ -223,5 +235,16 @@ class PurchaseReturnController extends Controller
     private function buildReturnBatchId(string $creditNoteNo): string
     {
         return 'RET-' . strtoupper($creditNoteNo);
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

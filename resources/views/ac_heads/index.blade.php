@@ -2,14 +2,16 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Create accounts head</h5></div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            <form action="{{ route('ac_heads.store') }}" method="POST">
-                @csrf
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Create accounts head</h5></div>
+            <div class="card-body">
+                <form action="{{ route('ac_heads.store') }}" method="POST">
+                    @csrf
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="ac_headname">Accounts head name</label>
@@ -31,9 +33,10 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save accounts head</button>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Accounts head list</h5></div>
@@ -55,12 +58,16 @@
                                 <td>{{ $acHead->ac_headname }}</td>
                                 <td>{{ $acHead->mode }}</td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('ac_heads.edit', $acHead) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form action="{{ route('ac_heads.destroy', $acHead) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
+                                    @if ($canEdit)
+                                        <a href="{{ route('ac_heads.edit', $acHead) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @endif
+                                    @if ($canDelete)
+                                        <form action="{{ route('ac_heads.destroy', $acHead) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

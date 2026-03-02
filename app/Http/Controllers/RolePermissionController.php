@@ -65,10 +65,24 @@ class RolePermissionController extends Controller
         $validated = $request->validate([
             'role_id' => ['required', 'exists:roles,id'],
             'permission_id' => ['required', 'exists:permissions,id'],
+            'can_view' => ['nullable', 'boolean'],
+            'can_add' => ['nullable', 'boolean'],
+            'can_edit' => ['nullable', 'boolean'],
+            'can_delete' => ['nullable', 'boolean'],
         ]);
 
         $validated['role_id'] = (int) $validated['role_id'];
         $validated['permission_id'] = (int) $validated['permission_id'];
+        $validated['can_view'] = $request->boolean('can_view');
+        $validated['can_add'] = $request->boolean('can_add');
+        $validated['can_edit'] = $request->boolean('can_edit');
+        $validated['can_delete'] = $request->boolean('can_delete');
+
+        if (! $validated['can_view'] && ! $validated['can_add'] && ! $validated['can_edit'] && ! $validated['can_delete']) {
+            throw ValidationException::withMessages([
+                'can_view' => 'Please select at least one action: view, add, edit, or delete.',
+            ]);
+        }
 
         $existing = RolePermission::where('role_id', $validated['role_id'])
             ->where('permission_id', $validated['permission_id']);

@@ -34,6 +34,32 @@
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
+                        <div class="form-group mb-3">
+                            <label class="d-block">Allowed actions</label>
+                            <input type="hidden" name="can_view" value="0">
+                            <input type="hidden" name="can_add" value="0">
+                            <input type="hidden" name="can_edit" value="0">
+                            <input type="hidden" name="can_delete" value="0">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="can_view" name="can_view" value="1" {{ old('can_view', $rolePermission->can_view) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="can_view">View</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="can_add" name="can_add" value="1" {{ old('can_add', $rolePermission->can_add) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="can_add">Add new</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="can_edit" name="can_edit" value="1" {{ old('can_edit', $rolePermission->can_edit) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="can_edit">Edit</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="can_delete" name="can_delete" value="1" {{ old('can_delete', $rolePermission->can_delete) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="can_delete">Delete</label>
+                            </div>
+                            @error('can_view')
+                                <div><small class="text-danger">{{ $message }}</small></div>
+                            @enderror
+                        </div>
                         <button type="submit" class="btn btn-primary">Update role permission</button>
                         <a href="{{ route('um.role_permissions.index') }}" class="btn btn-secondary">Back</a>
                     </form>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PurchaseMaster;
 use App\Models\PurchasePayment;
 use App\Models\Supplier;
+use App\Support\RolePermissionAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +15,17 @@ use Illuminate\View\View;
 
 class PurchasePaymentController extends Controller
 {
+    private const MODULE_NAMES = ['purchase-payment', 'payment-purchase'];
+
     public function index(Request $request): View
     {
+        $access = app(RolePermissionAccess::class);
+        $canView = $this->can($access, 'view');
+        $canAdd = $this->can($access, 'add');
+        $canDelete = $this->can($access, 'delete');
+
+        abort_unless($canView || $canAdd || $canDelete, 403);
+
         $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
         $selectedSupplierId = (string) $request->input('supplier_id', '');
 
@@ -61,11 +71,15 @@ class PurchasePaymentController extends Controller
             'suppliers' => $suppliers,
             'purchases' => $purchases,
             'selectedSupplierId' => $selectedSupplierId,
+            'canAdd' => $canAdd,
+            'canDelete' => $canDelete,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'add'), 403);
+
         $validated = $request->validate([
             'supplier_id' => ['required', 'exists:suppliers,supplier_id'],
             'purchase_id' => ['required', 'exists:purchase_master,id'],
@@ -125,6 +139,8 @@ class PurchasePaymentController extends Controller
 
     public function cancel(PurchasePayment $payment): RedirectResponse
     {
+        abort_unless($this->can(app(RolePermissionAccess::class), 'delete'), 403);
+
         $supplierId = (int) $payment->supplier_id;
 
         DB::transaction(function () use ($payment): void {
@@ -134,5 +150,16 @@ class PurchasePaymentController extends Controller
         return redirect()
             ->route('purchase-payments.index', ['supplier_id' => $supplierId])
             ->with('success', 'Payment cancelled successfully.');
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -12,7 +12,20 @@
                         @method('PUT')
                         <div class="form-group mb-3">
                             <label for="module_name">Module name</label>
-                            <input type="text" id="module_name" name="module_name" class="form-control" value="{{ old('module_name', $permission->module_name) }}" required>
+                            @php $selectedModule = old('module_name', $permission->module_name); @endphp
+                            <select id="module_name" name="module_name" class="form-control" required>
+                                <option value="">Select module</option>
+                                @foreach ($availableModules as $group => $modules)
+                                    <optgroup label="{{ $group }}">
+                                        @foreach ($modules as $module)
+                                            <option value="{{ $module }}" {{ $selectedModule === $module ? 'selected' : '' }}>{{ $module }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                                @if (! collect($availableModules)->flatten()->contains($selectedModule))
+                                    <option value="{{ $selectedModule }}" selected>{{ $selectedModule }}</option>
+                                @endif
+                            </select>
                             @error('module_name')
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror

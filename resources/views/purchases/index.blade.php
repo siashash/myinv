@@ -54,17 +54,19 @@
 @endphp
 
 <div class="container-fluid px-4 mt-4">
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    @if ($canAdd)
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Create purchase</h5>
         </div>
         <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
 
             <form action="{{ route('purchases.store') }}" method="POST">
                 @csrf
@@ -102,17 +104,6 @@
                         <label for="purchase_date">Purchase date</label>
                         <input type="date" id="purchase_date" name="purchase_date" class="form-control" value="{{ old('purchase_date', date('Y-m-d')) }}" required>
                         @error('purchase_date')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label for="purchase_mode">Purchase mode</label>
-                        <select id="purchase_mode" name="purchase_mode" class="form-control" required>
-                            @foreach (['Cash', 'Credit', 'UPI'] as $mode)
-                                <option value="{{ $mode }}" {{ old('purchase_mode', 'Cash') === $mode ? 'selected' : '' }}>{{ $mode }}</option>
-                            @endforeach
-                        </select>
-                        @error('purchase_mode')
                             <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </div>
@@ -171,6 +162,7 @@
             </form>
         </div>
     </div>
+    @endif
 
 <div class="card">
     <div class="card-header">
@@ -226,23 +218,27 @@
                                 @if ($hasPayment)
                                     <span class="badge badge-secondary">Locked</span>
                                 @else
-                                    <a href="{{ route('purchases.edit', $purchase) }}" 
-                                       class="btn btn-sm btn-info">
-                                        Edit
-                                    </a>
+                                    @if ($canEdit)
+                                        <a href="{{ route('purchases.edit', $purchase) }}"
+                                           class="btn btn-sm btn-info">
+                                            Edit
+                                        </a>
+                                    @endif
 
-                                    <form action="{{ route('purchases.destroy', $purchase) }}" 
-                                          method="POST" 
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
+                                    @if ($canDelete)
+                                        <form action="{{ route('purchases.destroy', $purchase) }}"
+                                              method="POST"
+                                              class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
 
-                                        <button type="submit" 
-                                                class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Are you sure?')">
-                                            Delete
-                                        </button>
-                                    </form>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -402,7 +398,12 @@
         document.getElementById('invoice_amount').value = (taxable + gst).toFixed(decimals);
     }
 
-    document.getElementById('add-row-btn').addEventListener('click', function () {
+    const addRowButton = document.getElementById('add-row-btn');
+    if (!addRowButton) {
+        return;
+    }
+
+    addRowButton.addEventListener('click', function () {
         createRow({
             unit_name: 'uom',
             cgst_percent: '0.00',

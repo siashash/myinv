@@ -2,20 +2,21 @@
 
 @section('content')
 <div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Create product</h5>
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
         </div>
-        <div class="card-body">
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+    @endif
 
-            <form action="{{ route('products.store') }}" method="POST">
-                @csrf
-                <div class="row">
+    @if ($canAdd)
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Create product</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ route('products.store') }}" method="POST">
+                    @csrf
+                    <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="category_id">Category</label>
                         <select id="category_id" name="category_id" class="form-control" required>
@@ -169,12 +170,13 @@
                             <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </div>
-                </div>
+                    </div>
 
-                <button type="submit" class="btn btn-primary">Save product</button>
-            </form>
+                    <button type="submit" class="btn btn-primary">Save product</button>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     <div class="card">
         <div class="card-header">
@@ -236,12 +238,16 @@
                                     </span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-info">Edit</a>
-                                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
+                                    @if ($canEdit)
+                                        <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-info">Edit</a>
+                                    @endif
+                                    @if ($canDelete)
+                                        <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -275,6 +281,10 @@
         const sgstPercent = document.getElementById('sgst_percent');
         const igstPercent = document.getElementById('igst_percent');
         const finalPrice = document.getElementById('final_price');
+
+        if (!categorySelect || !subCategorySelect || !unitSelect || !openingStockLabel || !purchasePrice || !salesPriceBu || !salesPriceSu || !salePrice || !discountAmount || !cgstPercent || !sgstPercent || !igstPercent || !finalPrice) {
+            return;
+        }
 
         async function loadSubCategories(categoryId, selectedId = '') {
             subCategorySelect.innerHTML = '<option value="">Select sub category</option>';

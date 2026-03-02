@@ -4,29 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Stock;
-use App\Models\Supplier;
+use App\Support\RolePermissionAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StockReportController extends Controller
 {
+    private const MODULE_NAMES = ['stock-report', 'stock', 'reports'];
+
     public function index(Request $request)
     {
-        $suppliers = Supplier::orderBy('supplier_name')->get(['supplier_id', 'supplier_name']);
+        abort_unless($this->can(app(RolePermissionAccess::class), 'view'), 403);
+
         $products = Product::orderBy('product_name')->get(['id', 'product_name', 'product_code']);
         $selectedProductId = (string) $request->input('product_id', '');
 
         $stockAgg = Stock::query()
             ->select([
                 'product_id',
-                DB::raw('SUM(CASE WHEN qty > 0 THEN qty ELSE 0 END) as purchase_qty'),
-                DB::raw('SUM(CASE WHEN qty < 0 THEN ABS(qty) ELSE 0 END) as purchase_return_qty'),
+                DB::raw('SUM(CASE WHEN purchase_id IS NOT NULL AND qty > 0 THEN qty ELSE 0 END) as purchase_qty'),
+                DB::raw('SUM(CASE WHEN purchase_id IS NOT NULL AND qty < 0 THEN ABS(qty) ELSE 0 END) as purchase_return_qty'),
+                DB::raw('SUM(CASE WHEN sale_id IS NOT NULL AND qty < 0 THEN ABS(qty) ELSE 0 END) as sales_qty'),
+                DB::raw('SUM(CASE WHEN sale_id IS NOT NULL AND qty > 0 THEN qty ELSE 0 END) as sales_return_qty'),
             ])
             ->whereNotNull('product_id');
-
-        if ($request->filled('supplier_id')) {
-            $stockAgg->where('supplier_id', (int) $request->input('supplier_id'));
-        }
 
         if ($request->filled('entry_date')) {
             $stockAgg->whereDate('entry_date', '<=', $request->string('entry_date'));
@@ -49,11 +50,11 @@ class StockReportController extends Controller
                 'products.uom',
                 DB::raw('COALESCE(products.opening_stock, 0) as opening_stock'),
                 DB::raw('COALESCE(stock_agg.purchase_qty, 0) as purchase_qty'),
-                DB::raw('CAST(0 AS DECIMAL(14,3)) as sales_qty'),
+                DB::raw('COALESCE(stock_agg.sales_qty, 0) as sales_qty'),
                 DB::raw('COALESCE(stock_agg.purchase_return_qty, 0) as purchase_return_qty'),
-                DB::raw('CAST(0 AS DECIMAL(14,3)) as sales_return_qty'),
-                DB::raw('(COALESCE(stock_agg.purchase_qty, 0) - COALESCE(stock_agg.purchase_return_qty, 0)) as movement_qty'),
-                DB::raw('(COALESCE(products.opening_stock, 0) + COALESCE(stock_agg.purchase_qty, 0) - COALESCE(stock_agg.purchase_return_qty, 0)) as current_stock'),
+                DB::raw('COALESCE(stock_agg.sales_return_qty, 0) as sales_return_qty'),
+                DB::raw('(COALESCE(stock_agg.purchase_qty, 0) + COALESCE(stock_agg.sales_return_qty, 0) - COALESCE(stock_agg.purchase_return_qty, 0) - COALESCE(stock_agg.sales_qty, 0)) as movement_qty'),
+                DB::raw('(COALESCE(products.opening_stock, 0) + COALESCE(stock_agg.purchase_qty, 0) + COALESCE(stock_agg.sales_return_qty, 0) - COALESCE(stock_agg.purchase_return_qty, 0) - COALESCE(stock_agg.sales_qty, 0)) as current_stock'),
             ])
             ->orderBy('products.product_name')
             ->get();
@@ -67,10 +68,6 @@ class StockReportController extends Controller
                 ->where('product_id', (int) $selectedProductId)
                 ->orderBy('entry_date')
                 ->orderBy('id');
-
-            if ($request->filled('supplier_id')) {
-                $movementQuery->where('supplier_id', (int) $request->input('supplier_id'));
-            }
 
             if ($request->filled('entry_date')) {
                 $movementQuery->whereDate('entry_date', '<=', $request->string('entry_date'));
@@ -98,15 +95,24 @@ class StockReportController extends Controller
 
         return view('reports.stock', [
             'rows' => $rows,
-            'suppliers' => $suppliers,
             'products' => $products,
             'selectedProduct' => $selectedProduct,
             'productMovements' => $productMovements,
             'filters' => [
-                'supplier_id' => (string) $request->input('supplier_id', ''),
                 'entry_date' => (string) $request->input('entry_date', ''),
                 'product_id' => $selectedProductId,
             ],
         ]);
+    }
+
+    private function can(RolePermissionAccess $access, string $action): bool
+    {
+        foreach (self::MODULE_NAMES as $moduleName) {
+            if ($access->allows($moduleName, $action)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
