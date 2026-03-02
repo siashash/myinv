@@ -132,11 +132,6 @@
                                 <label for="invoice_amount">Invoice amount</label>
                                 <input type="number" step="0.01" id="invoice_amount" class="form-control" readonly>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="round_off">Round off</label>
-                                <input type="number" step="1" min="0" max="4" id="round_off" class="form-control" value="2">
-                                <small class="form-text text-muted">Digits after decimal for invoice amount</small>
-                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Update purchase</button>
@@ -155,7 +150,6 @@
         const products = @json($productRows);
         const prefillRows = @json($prefillRows);
         const body = document.getElementById('purchase-lines-body');
-        const roundOffInput = document.getElementById('round_off');
 
         function productOptions(selectedId) {
             let html = '<option value="">Select product</option>';
@@ -185,50 +179,27 @@
                 const selected = products.find(p => String(p.id) === String(row.querySelector('.product-id').value));
                 const unitNameSelect = row.querySelector('.unit-name');
                 if (selected) {
-                    const currentUnitValue = unitNameSelect.value || data.unit_name || 'uom';
-                    const baseLabel = selected.uom || 'Base';
-                    const salesLabel = selected.sales_uom || 'Sales';
                     const basePrice = Number(selected.sales_price_bu || 0);
                     const salesPrice = Number(selected.sales_price_su || 0);
 
                     unitNameSelect.innerHTML =
-                        '<option value="uom">P.Uom (' + baseLabel + ')</option>' +
-                        '<option value="sales_uom">S.Uom (' + salesLabel + ')</option>';
-                    const selectedUnit = currentUnitValue === 'sales_uom' ? 'sales_uom' : 'uom';
-                    unitNameSelect.value = selectedUnit;
-                    row.querySelector('.sale-price').value = (selectedUnit === 'sales_uom' ? salesPrice : basePrice).toFixed(2);
-                } else {
-                    unitNameSelect.innerHTML =
-                        '<option value="uom">P.Uom</option>' +
-                        '<option value="sales_uom">S.Uom</option>';
-                    unitNameSelect.value = 'uom';
-                    row.querySelector('.sale-price').value = '0.00';
+                        '<option value="uom">P.Uom (' + selected.uom + ')</option>' +
+                        '<option value="sales_uom">S.Uom (' + selected.sales_uom + ')</option>';
+
+                    unitNameSelect.value = data.unit_name || 'uom';
+                    row.querySelector('.sale-price').value = (unitNameSelect.value === 'sales_uom' ? salesPrice : basePrice).toFixed(2);
                 }
-                row.querySelector('.cgst-percent').value = selected ? Number(selected.cgst_percent || 0).toFixed(2) : '0.00';
-                row.querySelector('.sgst-percent').value = selected ? Number(selected.sgst_percent || 0).toFixed(2) : '0.00';
-                row.querySelector('.igst-percent').value = selected ? Number(selected.igst_percent || 0).toFixed(2) : '0.00';
                 recalcRow(row);
             }
 
             row.querySelector('.product-id').addEventListener('change', syncProduct);
-            row.querySelector('.unit-name').addEventListener('change', syncProduct);
-            row.querySelectorAll('.qty, .sale-price, .cgst-percent, .sgst-percent, .igst-percent').forEach(function (input) {
+            row.querySelectorAll('.qty').forEach(function (input) {
                 input.addEventListener('input', function () {
                     recalcRow(row);
                 });
             });
 
             row.querySelector('.remove-row').addEventListener('click', function () {
-                if (body.querySelectorAll('tr').length === 1) {
-                    row.querySelectorAll('input').forEach(function (input) {
-                        if (!input.readOnly) {
-                            input.value = '';
-                        }
-                    });
-                    row.querySelector('.product-id').value = '';
-                    recalcRow(row);
-                    return;
-                }
                 row.remove();
                 recalcTotals();
             });
@@ -273,15 +244,12 @@
 
             document.getElementById('tot_taxable_amount').value = taxable.toFixed(2);
             document.getElementById('tot_gst_amount').value = gst.toFixed(2);
-            const decimals = Math.max(0, Math.min(4, parseInt(roundOffInput.value || '2', 10)));
-            document.getElementById('invoice_amount').value = (taxable + gst).toFixed(decimals);
+            document.getElementById('invoice_amount').value = (taxable + gst).toFixed(2);
         }
 
         document.getElementById('add-row-btn').addEventListener('click', function () {
             createRow({ unit_name: 'uom', cgst_percent: '0.00', sgst_percent: '0.00', igst_percent: '0.00' });
         });
-
-        roundOffInput.addEventListener('input', recalcTotals);
 
         prefillRows.forEach(function (row) {
             createRow(row);

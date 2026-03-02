@@ -161,33 +161,70 @@
 
                     <button type="button" id="add-line-btn" class="btn btn-success mb-3">Add new</button>
 
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="taxable_total">Taxable Total</label>
-                            <input type="number" step="0.01" id="taxable_total" class="form-control" value="0.00" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="gst_total">GST Total</label>
-                            <input type="number" step="0.01" id="gst_total" class="form-control" value="0.00" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="discount_amount">Discount</label>
-                            <input type="number" step="0.01" min="0" id="discount_amount" name="discount_amount" class="form-control" value="{{ old('discount_amount', '0.00') }}">
-                            @error('discount_amount')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="grand_total">Final Amount</label>
-                            <input type="number" step="0.01" id="grand_total" class="form-control" value="0.00" readonly>
-                        </div>
-                    </div>
+        <div class="row align-items-end">
 
-                    <button type="submit" class="btn btn-primary">Save sales</button>
-                </form>
+            <div class="col-md-3 mb-3">
+                <label>Taxable Total</label>
+                <input type="number"
+                    step="0.01"
+                    id="taxable_total"
+                    class="form-control text-end"
+                    value="0.00"
+                    readonly>
             </div>
+
+            <div class="col-md-3 mb-3">
+                <label>GST Total</label>
+                <input type="number"
+                    step="0.01"
+                    id="gst_total"
+                    class="form-control text-end"
+                    value="0.00"
+                    readonly>
+            </div>
+
+            <div class="col-md-2 mb-3">
+                <label>Discount</label>
+                <input type="number"
+                    step="0.01"
+                    min="0"
+                    id="discount_amount"
+                    name="discount_amount"
+                    class="form-control text-end"
+                    value="{{ old('discount_amount','0.00') }}">
+            </div>
+
+            <div class="col-md-2 mb-3">
+                <label>Round Off</label>
+                <input type="number"
+                    step="0.01"
+                    id="round_off"
+                    name="round_off"
+                    class="form-control text-end"
+                    value="{{ old('round_off','0.00') }}">
+            </div>
+
+            <div class="col-md-2 mb-3">
+                <label>Final Amount</label>
+                <input type="number"
+                    step="0.01"
+                    id="grand_total"
+                    class="form-control text-end fw-bold"
+                    value="0.00"
+                    readonly>
+            </div>
+
         </div>
-    @endif
+                        <button type="submit" class="btn btn-primary">
+                            Save sales
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+            @endif
+
+
 
     <div class="card sales-card-wide">
         <div class="card-header">
